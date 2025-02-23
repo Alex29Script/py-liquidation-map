@@ -235,12 +235,18 @@ class HistoricalMapping:
         :return:
         """
         # Downloading historical data
+        print("_download, empezar")
         self._download()
-
+        print("_download, Terminado")
         # Formatting historical data
         df_merged = self._make_merged_dataframe()
+        print("df_merged 5, creado")
         df_buy = self._make_buy_dataframe()
+        df_buy.to_csv("../liquidation-map-python/datacreada/df_buy.csv", index=False)
+        print("df_buy, creado")
         df_sell = self._make_sell_dataframe()
+        df_sell.to_csv("../liquidation-map-python/datacreada/df_sell.csv", index=False)
+        print("df_sell, creado")
 
         # mode: gross_value
         if mode == "gross_value":
@@ -260,9 +266,12 @@ class HistoricalMapping:
         else:
             raise InvalidParamError(f"mode {mode} is not supported.")
 
+        print("modo, creado")
+        
         # Visualize liquidation map
-        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(9, 9))
+        #fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, sharey=True, figsize=(9, 9))
         # draw price on ax1
+        """
         for i, dt in enumerate(df_buy["timestamp"]):
             label = "large BUY LONG" if i == 0 else None
             ax1.scatter(
@@ -299,7 +308,7 @@ class HistoricalMapping:
             title += f"\nthreshold: >= {threshold_gross_value} [USDT]"
         ax1.set_title(title)
         ax1.legend()
-
+        """
         # Buy liquidation map on ax2
         df_losscut_10x = pd.DataFrame(columns=["price", "amount"])
         for i, dt in enumerate(df_buy.index):
@@ -339,6 +348,7 @@ class HistoricalMapping:
         ]
         labels = ["10x Leveraged", "25x Leveraged", "50x Leveraged", "100x Leveraged"]
         colors = ["r", "g", "b", "y"]
+        labels2 = ["10x", "25x", "50x", "100x"]
         tick_degits = 2 - math.ceil(
             math.log10(df_merged["price"].max() - df_merged["price"].min())
         )
@@ -362,6 +372,7 @@ class HistoricalMapping:
             ]
             df_losscut["group_id"] = pd.cut(df_losscut["price"], bins=bins)
             agg_df = df_losscut.groupby("group_id").sum()
+            """
             ax2.barh(
                 [f.left for f in agg_df.index],
                 agg_df["amount"],
@@ -370,9 +381,13 @@ class HistoricalMapping:
                 label=labels[i],
                 alpha=0.5,
             )
+            """
             if agg_df["amount"].max() > max_amount:
                 max_amount = agg_df["amount"].max()
 
+            df_losscut.to_csv(f"../liquidation-map-python/datacreada/buy/df_losscut_buy_{labels2[i]}.csv", index=False)
+            agg_df.to_csv(f"../liquidation-map-python/datacreada/buy/agg_df_buy_{labels2[i]}.csv", index=False)
+            
         # Save liquidation map data as csv
         save_title = f"{self._symbol}_{self._start_datetime.replace(' ', '_').replace(':', '-')}-{self._end_datetime.replace(' ', '_').replace(':', '-')}"
         if mode == "gross_value":
@@ -388,6 +403,7 @@ class HistoricalMapping:
             df_l.to_csv(
                 f"{save_title.replace('.png', '')}_{label.replace(' ','_')}_buy.csv"
             )
+        print("buy, creado")
 
         # Sell liquidation map on ax2
         df_losscut_10x = pd.DataFrame(columns=["price", "amount"])
@@ -428,6 +444,7 @@ class HistoricalMapping:
         ]
         labels = ["10x Leveraged", "25x Leveraged", "50x Leveraged", "100x Leveraged"]
         colors = ["r", "g", "b", "y"]
+        
         tick_degits = 2 - math.ceil(
             math.log10(df_merged["price"].max() - df_merged["price"].min())
         )
@@ -451,6 +468,7 @@ class HistoricalMapping:
             ]
             df_losscut["group_id"] = pd.cut(df_losscut["price"], bins=bins)
             agg_df = df_losscut.groupby("group_id").sum()
+            """
             ax2.barh(
                 [f.left for f in agg_df.index],
                 agg_df["amount"],
@@ -458,9 +476,13 @@ class HistoricalMapping:
                 color=colors[i],
                 alpha=0.5,
             )
+            """
             if agg_df["amount"].max() > max_amount:
                 max_amount = agg_df["amount"].max()
 
+            df_losscut.to_csv(f"../liquidation-map-python/datacreada/sell/df_losscut_sell_{labels2[i]}.csv", index=False)
+            agg_df.to_csv(f"../liquidation-map-python/datacreada/sell/agg_df_sell_{labels2[i]}.csv", index=False)
+        """
         ax2.annotate(
             "",
             xytext=(max_amount, current_price),
@@ -478,12 +500,15 @@ class HistoricalMapping:
         plt.tight_layout()
         plt.savefig(save_title)
         plt.close()
-
+        
+        """
+        print("sell, creado")
         # Save liquidation map data as csv
         for df_l, label in zip(df_losscut_list, labels):
             df_l.to_csv(
                 f"{save_title.replace('.png', '')}_{label.replace(' ','_')}_sell.csv"
             )
+        print("Terminado, creado")
 
     def liquidation_map_depth_from_historical(
         self,
